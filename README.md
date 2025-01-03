@@ -1,6 +1,6 @@
 # Via Provisiones - Your Premium Food Market
 
-![Via Provisiones Store](/placeholder.svg?height=400&width=800)
+![Via Provisiones Store](./public/image.png)
 
 ## About Via Provisiones
 
