@@ -73,7 +73,7 @@ export default function Addresses() {
         let decodedToken: DecodedToken
         try {
           decodedToken = jwtDecode<DecodedToken>(token)
-        } catch (decodeError) {
+        } catch {
           throw new Error('Failed to decode token')
         }
 
@@ -90,8 +90,8 @@ export default function Addresses() {
         }
         
         setIsLoading(false)
-      } catch (err: any) {
-        setError(`Failed to load user data: ${err.message || 'Unknown error'}`)
+      } catch (error) {
+        setError(`Failed to load user data: ${error instanceof Error ? error.message : 'Unknown error'}`)
         setIsLoading(false)
       }
     }
@@ -110,8 +110,8 @@ export default function Addresses() {
 
       await axiosInstance.put(`/users/${user._id}`, updatedUser)
       setUser(updatedUser)
-    } catch (err: any) {
-      setError(`Failed to delete address: ${err.message || 'Unknown error'}`)
+    } catch (error) {
+      setError(`Failed to delete address: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -144,8 +144,8 @@ export default function Addresses() {
       } else {
         throw new Error('Failed to update address')
       }
-    } catch (err: any) {
-      setError(`Failed to update address: ${err.message || 'Unknown error'}`)
+    } catch (error) {
+      setError(`Failed to update address: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 

@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Formik, Form, Field, ErrorMessage } from 'formik'
+import { Formik, Form, Field, ErrorMessage, FieldProps } from 'formik'
 import * as Yup from 'yup'
 import { axiosInstance } from "@/lib/axiosInstance"
 import { useToast } from "@/hooks/use-toast"
@@ -36,12 +36,18 @@ const initialValues = {
   confirmPassword: "",
 }
 
+type FormValues = typeof initialValues;
+
+interface DecodedToken {
+  userId: string;
+}
+
 export default function ChangePassword() {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
 
-  const handleSubmit = async (values: typeof initialValues, { setSubmitting, resetForm }: { setSubmitting: (isSubmitting: boolean) => void, resetForm: () => void }) => {
+  const handleSubmit = async (values: FormValues, { setSubmitting, resetForm }: { setSubmitting: (isSubmitting: boolean) => void, resetForm: () => void }) => {
     setIsLoading(true)
     try {
       const token = Cookies.get('token')
@@ -55,7 +61,7 @@ export default function ChangePassword() {
         return
       }
 
-      const decodedToken = jwtDecode<{ userId: string }>(token)
+      const decodedToken = jwtDecode<DecodedToken>(token)
       const userId = decodedToken.userId
 
       const response = await axiosInstance.put("/users/change-password", {
@@ -74,12 +80,20 @@ export default function ChangePassword() {
       } else {
         throw new Error(response.data.error || "Failed to change password")
       }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.error || error.message || "An error occurred while changing your password.",
-        variant: "destructive",
-      })
+    } catch (error) {
+      if (error instanceof Error) {
+        toast({
+          title: "Error",
+          description: error.message || "An error occurred while changing your password.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "An unknown error occurred while changing your password.",
+          variant: "destructive",
+        })
+      }
     } finally {
       setIsLoading(false)
       setSubmitting(false)
@@ -112,7 +126,7 @@ export default function ChangePassword() {
                     Current Password
                   </label>
                   <Field name="oldPassword">
-                    {({ field }: any) => (
+                    {({ field }: FieldProps) => (
                       <Input
                         type="password"
                         placeholder="Enter your current password"
@@ -130,7 +144,7 @@ export default function ChangePassword() {
                     New Password
                   </label>
                   <Field name="newPassword">
-                    {({ field }: any) => (
+                    {({ field }: FieldProps) => (
                       <Input
                         type="password"
                         placeholder="Enter your new password"
@@ -148,7 +162,7 @@ export default function ChangePassword() {
                     Confirm New Password
                   </label>
                   <Field name="confirmPassword">
-                    {({ field }: any) => (
+                    {({ field }: FieldProps) => (
                       <Input
                         type="password"
                         placeholder="Confirm your new password"

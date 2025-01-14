@@ -9,6 +9,14 @@ import PopularBrands from "@/components/home/PopularBrands";
 import { BaggageClaim } from 'lucide-react';
 import { axiosInstance } from "@/lib/axiosInstance";
 
+interface Variation {
+  color: string;
+  size: string;
+  price: number;
+  sku: string;
+  _id: string;
+}
+
 interface Product {
   _id: string;
   name: string;
@@ -23,6 +31,10 @@ interface Product {
   offer?: {
     discountPercentage: number;
   };
+  variations: Variation[]; // Ahora usamos el tipo 'Variation' para el array
+  brand: string;
+  status: string;
+  unit: string;
 }
 
 export default function Home() {
@@ -107,7 +119,7 @@ export default function Home() {
       <Carousel/>
       <CategoryCarousel/>
       <PromotionCards/>
-      <div className="xl:container px-2 xl:px-4 mt-10 mx-auto">
+      <div className="xl:container px-4 xl:px-4 mt-10 mx-auto">
         <h2 className="text-4xl font-bold mb-4">Colección de productos</h2>
         <ProductCard 
           isWishlisted={isWishlisted} 
@@ -116,7 +128,7 @@ export default function Home() {
         />
       </div>
       <div className="xl:container px-2 xl:px-4 mt-10 mx-auto">
-        <h2 className="text-4xl font-bold mb-4">Flash Sales</h2>
+        <h2 className="text-4xl font-bold mb-4">Ventas flash</h2>
         <ProductCard 
           isWishlisted={isWishlisted} 
           data={flashSaleProducts} 
@@ -124,7 +136,7 @@ export default function Home() {
         />
       </div>
       <PopularBrands/>
-      <div className="mx-auto xl:container px-2 xl:px-4 mt-10">
+      <div className="mx-auto xl:container px-2 xl:px-4 mt-10 ">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-8">
           {services.map((item, index) => (
             <div key={index} className="text-center">

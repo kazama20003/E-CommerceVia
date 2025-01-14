@@ -85,7 +85,7 @@ export const VariationTab: React.FC<ProductProps> = ({ product }) => {
     try {
       const payload = {
         ...formData,
-        price: parseFloat(formData.price)
+        price: parseFloat(formData.price) || 0 // Ensure price is always a number
       }
 
       let response
@@ -140,23 +140,23 @@ export const VariationTab: React.FC<ProductProps> = ({ product }) => {
 
   const getBadgeStyles = useCallback((color: string) => {
     const colorMap: Record<string, { bg: string; text: string }> = {
-      'White': { bg: 'white', text: 'black' },
-      'Black': { bg: 'black', text: 'white' },
-      'Navy': { bg: '#000080', text: 'white' },
-      'Gray': { bg: '#808080', text: 'white' },
-      'Beige': { bg: '#F5F5DC', text: 'black' },
-      'Brown': { bg: '#8B4513', text: 'white' },
-      'Red': { bg: '#FF0000', text: 'white' },
-      'Green': { bg: '#008000', text: 'white' },
-      'Blue': { bg: '#0000FF', text: 'white' }
+      'White': { bg: '#FFFFFF', text: '#000000' },
+      'Black': { bg: '#000000', text: '#FFFFFF' },
+      'Navy': { bg: '#000080', text: '#FFFFFF' },
+      'Gray': { bg: '#808080', text: '#FFFFFF' },
+      'Beige': { bg: '#F5F5DC', text: '#000000' },
+      'Brown': { bg: '#8B4513', text: '#FFFFFF' },
+      'Red': { bg: '#FF0000', text: '#FFFFFF' },
+      'Green': { bg: '#008000', text: '#FFFFFF' },
+      'Blue': { bg: '#0000FF', text: '#FFFFFF' }
     }
 
-    return colorMap[color] || { bg: 'transparent', text: 'black' }
+    return colorMap[color] || { bg: '#CCCCCC', text: '#000000' }
   }, [])
 
   const variationsList = useMemo(() => {
     return variations.map((variation, index) => {
-      const { bg, text } = getBadgeStyles(variation.color || '')
+      const { bg, } = getBadgeStyles(variation.color || '')
       return (
         <div 
           key={variation._id || index} 
@@ -164,19 +164,17 @@ export const VariationTab: React.FC<ProductProps> = ({ product }) => {
         >
           <div>
             <div 
-              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
+              className="w-6 h-6 rounded-full"
               style={{
                 backgroundColor: bg,
-                color: text,
-                borderColor: 'rgba(0,0,0,0.1)'
+                border: '1px solid rgba(0,0,0,0.1)'
               }}
-            >
-              {variation.color || 'N/A'}
-            </div>
+              title={variation.color || 'N/A'}
+            />
           </div>
           <div className="text-sm">{variation.size || 'N/A'}</div>
           <div className="text-sm">
-            ${typeof variation.price === 'number' ? variation.price.toFixed(2) : '0.00'}
+            S/{typeof variation.price === 'number' ? variation.price.toFixed(2) : '0.00'}
           </div>
           <div className="text-sm text-gray-500">{variation.sku || 'N/A'}</div>
           <div className="flex justify-end gap-1">
@@ -299,6 +297,8 @@ export const VariationTab: React.FC<ProductProps> = ({ product }) => {
                 value={formData.price}
                 onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                 placeholder="Enter price"
+                step="0.01"
+                min="0"
                 className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>

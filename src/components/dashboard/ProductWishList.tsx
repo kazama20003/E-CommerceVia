@@ -50,7 +50,7 @@ const ProductItem: React.FC<{
   item: Product
   isWishlisted: boolean
   onRemoveFromWishlist?: () => void 
-}> = ({ item, isWishlisted, onRemoveFromWishlist }) => {
+}> = ({ item, onRemoveFromWishlist }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   const nextImage = (e: React.MouseEvent) => {

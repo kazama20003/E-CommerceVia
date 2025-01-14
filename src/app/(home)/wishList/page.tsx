@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import Cookies from 'js-cookie'
 import { Trash2, Heart } from 'lucide-react'
-import { ProductWishList } from '@/components/dashboard/ProductWishList'
+import { ProductCard } from '@/components/ProductCard'
 import { axiosInstance } from '@/lib/axiosInstance'
 import { Button } from '@/components/ui/button'
 import { Header } from '@/components/layout/Header'
@@ -24,6 +24,16 @@ interface Product {
   offer?: {
     discountPercentage: number
   }
+  variations: Array<{
+    color: string
+    size: string
+    price: number
+    sku: string
+    _id: string
+  }>
+  brand: string
+  status: string
+  unit: string
 }
 
 interface DecodedToken {
@@ -55,11 +65,23 @@ export default function WishList() {
 
       const decodedToken = jwtDecode(token) as DecodedToken
       const userId = decodedToken.userId
+      console.log(userId);
+      
       setUserId(userId)
 
       const response = await axiosInstance.get<WishlistResponse>(`/wishlist/${userId}`)
+      console.log(response);
+      
       if (response.data && response.data.product && Array.isArray(response.data.product)) {
-        setProducts(response.data.product)
+        // Ensure all required properties are present
+        const completeProducts = response.data.product.map(product => ({
+          ...product,
+          variations: product.variations || [],
+          brand: product.brand || '',
+          status: product.status || '',
+          unit: product.unit || ''
+        }))
+        setProducts(completeProducts)
         setWishlistId(response.data._id)
       } else {
         setError('Invalid response format')
@@ -82,9 +104,7 @@ export default function WishList() {
         setError('Wishlist ID not found')
         return
       }
-      // Using the correct endpoint format
       await axiosInstance.delete(`/wishlist/${wishlistId}/product/${productId}`)
-      // Update local state to remove the product
       setProducts(products.filter(product => product._id !== productId))
     } catch (err) {
       setError('Error removing product from wishlist')
@@ -144,10 +164,10 @@ export default function WishList() {
               <p className="text-xl text-gray-500">Tu lista de deseos está vacía.</p>
             </div>
           ) : (
-            <ProductWishList 
+            <ProductCard 
               data={products} 
               isWishlisted={true} 
-              onRemoveFromWishlist={removeFromWishlist}
+              onToggleWishlist={removeFromWishlist}
             />
           )}
         </div>

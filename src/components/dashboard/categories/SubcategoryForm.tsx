@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useState, useEffect } from 'react'
-import { Formik, Form, Field } from 'formik'
+import { Formik, Form, Field, FieldProps } from 'formik'
 import * as Yup from 'yup'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { axiosInstance } from '@/lib/axiosInstance'
 import { useToast } from "@/hooks/use-toast"
+import Image from 'next/image'
 
 interface SubCategory {
   _id: string
@@ -40,11 +41,7 @@ const CategorySchema = Yup.object().shape({
   status: Yup.string().oneOf(['active', 'inactive']).required('Status is required'),
 })
 
-const SubCategorySchema = Yup.object().shape({
-  name: Yup.string().required('Subcategory name is required'),
-})
-
-function ImageUpload({ imageUrl, setFieldValue }: { imageUrl: string, setFieldValue: (field: string, value: any) => void }) {
+function ImageUpload({ imageUrl, setFieldValue }: { imageUrl: string, setFieldValue: (field: string, value: { url: string; id: string }) => void }) {
   const { toast } = useToast()
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,7 +82,7 @@ function ImageUpload({ imageUrl, setFieldValue }: { imageUrl: string, setFieldVa
       />
       {imageUrl && (
         <div className="mt-2">
-          <img src={imageUrl} alt="Category preview" className="max-w-full h-auto max-h-48 object-contain" />
+          <Image src={imageUrl || "/placeholder.svg"} alt="Category preview" width={200} height={200} className="max-w-full h-auto max-h-48 object-contain" />
         </div>
       )}
     </div>
@@ -132,7 +129,7 @@ export function CategoryForm({ open, onOpenChange, onSubmit, initialCategory }: 
 
       if (values._id) {
         // Update existing category
-        const response = await axiosInstance.put(`/categories/${values._id}`, {
+        await axiosInstance.put(`/categories/${values._id}`, {
           category: values.category,
           image: values.image,
           status: values.status
@@ -227,7 +224,7 @@ export function CategoryForm({ open, onOpenChange, onSubmit, initialCategory }: 
               <div>
                 <Label htmlFor="status">Status</Label>
                 <Field name="status">
-                  {({ field }: { field: any }) => (
+                  {({ field }: FieldProps) => (
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select status" />

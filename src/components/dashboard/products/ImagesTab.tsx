@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { axiosInstance } from '@/lib/axiosInstance'
 import { useToast } from '@/hooks/use-toast'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+import Image from 'next/image'
 
 interface Image {
   _id: string;
@@ -61,7 +62,7 @@ export const ImagesTab: React.FC<ProductProps> = ({ product: initialProduct }) =
     fetchProductImages();
   }, [fetchProductImages]);
 
-  const addImageToProduct = async (imageUrl: string, publicId: string) => {
+  const addImageToProduct = useCallback(async (imageUrl: string, publicId: string) => {
     try {
       const response = await axiosInstance.post(`/products/${productId}/images`, { 
         url: imageUrl,
@@ -84,7 +85,7 @@ export const ImagesTab: React.FC<ProductProps> = ({ product: initialProduct }) =
         variant: "destructive",
       });
     }
-  };
+  }, [productId, toast, fetchProductImages]);
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>, imageToEdit?: Image) => {
     const files = event.target.files;
@@ -131,7 +132,7 @@ export const ImagesTab: React.FC<ProductProps> = ({ product: initialProduct }) =
     }
   }, [addImageToProduct, productId, toast, fetchProductImages]);
 
-  const handleDeleteImage = async (imageId: string, publicId: string) => {
+  const handleDeleteImage = useCallback(async (imageId: string, publicId: string) => {
     try {
       await axiosInstance.delete(`/upload/${publicId}`);
       const productResponse = await axiosInstance.delete(`/products/${productId}/images/${imageId}`);
@@ -168,19 +169,19 @@ export const ImagesTab: React.FC<ProductProps> = ({ product: initialProduct }) =
         variant: "destructive",
       });
     }
-  };
+  }, [productId, toast, fetchProductImages, product.images.length]);
 
-  const handlePrevImage = () => {
+  const handlePrevImage = useCallback(() => {
     setMainImageIndex((prevIndex) => 
       prevIndex === 0 ? product.images.length - 1 : prevIndex - 1
     );
-  };
+  }, [product.images.length]);
 
-  const handleNextImage = () => {
+  const handleNextImage = useCallback(() => {
     setMainImageIndex((prevIndex) => 
       prevIndex === product.images.length - 1 ? 0 : prevIndex + 1
     );
-  };
+  }, [product.images.length]);
 
   return (
     <div className="space-y-6">
@@ -209,10 +210,11 @@ export const ImagesTab: React.FC<ProductProps> = ({ product: initialProduct }) =
         <div className="space-y-6">
           <div className="relative bg-gray-100 rounded-lg overflow-hidden max-w-2xl mx-auto">
             <div className="aspect-w-4 aspect-h-3 md:aspect-w-3 md:aspect-h-2">
-              <img 
-                src={product.images[mainImageIndex]?.url} 
+              <Image 
+                src={product.images[mainImageIndex]?.url || "/placeholder.svg"} 
                 alt={`Product Image ${mainImageIndex + 1}`}
-                className="object-contain w-full h-full"
+                layout="fill"
+                objectFit="contain"
               />
             </div>
             <div className="absolute inset-0 flex items-center justify-between p-2">
@@ -246,10 +248,12 @@ export const ImagesTab: React.FC<ProductProps> = ({ product: initialProduct }) =
               >
                 <CardContent className="p-1">
                   <div className="relative aspect-square">
-                    <img 
-                      src={image.url} 
+                    <Image 
+                      src={image.url || "/placeholder.svg"} 
                       alt={`Product Thumbnail ${index + 1}`}
-                      className="object-cover w-full h-full rounded"
+                      layout="fill"
+                      objectFit="cover"
+                      className="rounded"
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-50 transition-opacity flex items-center justify-center opacity-0 hover:opacity-100">
                       <Button
@@ -300,7 +304,14 @@ export const ImagesTab: React.FC<ProductProps> = ({ product: initialProduct }) =
           </DialogHeader>
           {selectedImage && (
             <div className="space-y-4">
-              <img src={selectedImage.url} alt="Product" className="w-full h-auto rounded" />
+              <Image 
+                src={selectedImage.url || "/placeholder.svg"} 
+                alt="Product" 
+                width={400} 
+                height={300} 
+                layout="responsive" 
+                className="rounded" 
+              />
               {isEditing && (
                 <div>
                   <Input

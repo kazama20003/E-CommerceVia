@@ -27,7 +27,7 @@ const CategoryCard = ({ category }: { category: Category }) => (
       whileHover={{ scale: 1.1 }}
     >
       <Image 
-        src={category.image.url} 
+        src={category.image.url || "/placeholder.svg"} 
         alt={category.name} 
         width={192}
         height={144}
@@ -144,7 +144,7 @@ export default function CategoryCarousel() {
         console.log(response, "categories");
         
         if (response.data && Array.isArray(response.data)) {
-          setCategories(response.data.map((category: any) => ({
+          setCategories(response.data.map((category: { _id: string; name: string; image: { url: string } }) => ({
             _id: category._id,
             name: category.name,
             image: { url: category.image.url }

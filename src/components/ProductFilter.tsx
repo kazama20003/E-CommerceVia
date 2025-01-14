@@ -7,9 +7,27 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { axiosInstance } from '@/lib/axiosInstance'
 
+interface FilterOptions {
+  minPrice?: number;
+  maxPrice?: number;
+  brand?: string[];
+  category?: string[];
+  search?: string;
+  sortBy?: string;
+}
+
+
 interface FilterProps {
-  onFilterChange: (filters: any) => void
-  initialFilters: any
+  onFilterChange: (filters: FilterOptions) => void;
+  initialFilters: FilterOptions;
+}
+
+interface Brand {
+  name: string;
+}
+
+interface Category {
+  name: string;
 }
 
 export default function ProductFilter({ onFilterChange, initialFilters }: FilterProps) {
@@ -24,11 +42,9 @@ export default function ProductFilter({ onFilterChange, initialFilters }: Filter
   useEffect(() => {
     const fetchBrands = async () => {
       try {
-        const response = await axiosInstance.get('/brands')
+        const response = await axiosInstance.get<Brand[]>('/brands')
         if (response.data && Array.isArray(response.data)) {
-          setBrands(response.data.map((brand: any) => brand.name))
-        } else {
-          console.error('Invalid brand data format:', response.data)
+          setBrands(response.data.map((brand) => brand.name))
         }
       } catch (error) {
         console.error('Error fetching brands:', error)
@@ -37,11 +53,9 @@ export default function ProductFilter({ onFilterChange, initialFilters }: Filter
 
     const fetchCategories = async () => {
       try {
-        const response = await axiosInstance.get('/categories')
+        const response = await axiosInstance.get<Category[]>('/categories')
         if (response.data && Array.isArray(response.data)) {
-          setCategories(response.data.map((category: any) => category.name))
-        } else {
-          console.error('Invalid category data format:', response.data)
+          setCategories(response.data.map((category) => category.name))
         }
       } catch (error) {
         console.error('Error fetching categories:', error)
@@ -132,7 +146,7 @@ export default function ProductFilter({ onFilterChange, initialFilters }: Filter
                 checked={selectedBrands.includes(brand)}
                 onCheckedChange={(checked) => handleBrandChange(brand, checked as boolean)}
               />
-              <label htmlFor={brand} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label htmlFor={brand} className="text-sm font-medium">
                 {brand}
               </label>
             </div>
@@ -150,7 +164,7 @@ export default function ProductFilter({ onFilterChange, initialFilters }: Filter
                 checked={selectedCategories.includes(category)}
                 onCheckedChange={(checked) => handleCategoryChange(category, checked as boolean)}
               />
-              <label htmlFor={category} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label htmlFor={category} className="text-sm font-medium">
                 {category}
               </label>
             </div>
@@ -174,4 +188,3 @@ export default function ProductFilter({ onFilterChange, initialFilters }: Filter
     </div>
   )
 }
-

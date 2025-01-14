@@ -2,9 +2,11 @@
 
 import { FileClock, PackageMinus, UserCog, LockKeyhole, Mail, Power, LayoutDashboard } from 'lucide-react'
 import Link from "next/link"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import Cookies from 'js-cookie'
 import { useEffect, useState } from 'react'
+import { jwtDecode } from 'jwt-decode'
+import { axiosInstance } from '@/lib/axiosInstance'
 
 type MenuItem = {
   icon: JSX.Element
@@ -14,22 +16,43 @@ type MenuItem = {
 }
 
 type User = {
-  avatarURL: string
   name: string
-  phone: string
+  mobile: string
+  email: string
+  role: string
 }
 
-type ProfileProps = {
-  user: User
-}
-
-export const Profile: React.FC<ProfileProps> = ({ user }) => {
+export const Profile: React.FC = () => {
   const [role, setRole] = useState<string | undefined>(undefined)
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Read the role from the cookie when the component mounts
-    const userRole = Cookies.get('role')
-    setRole(userRole)
+    const fetchUserData = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const token = Cookies.get('token')
+        if (!token) {
+          throw new Error('No token found')
+        }
+
+        const decodedToken = jwtDecode(token) as { userId: string }
+        const userId = decodedToken.userId
+
+        const response = await axiosInstance.get(`/users/${userId}`)
+        setUser(response.data.user)
+        setRole(response.data.user.role)
+      } catch (err) {
+        console.error('Error fetching user data:', err)
+        setError('Failed to load user data')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUserData()
   }, [])
 
   const menuItems: MenuItem[] = [
@@ -77,15 +100,26 @@ export const Profile: React.FC<ProfileProps> = ({ user }) => {
     },
   ]
 
+  if (isLoading) {
+    return <div className="w-full text-center py-4">Cargando...</div>
+  }
+
+  if (error) {
+    return <div className="w-full text-center py-4 text-red-500">{error}</div>
+  }
+
+  if (!user) {
+    return <div className="w-full text-center py-4">No se encontró información del usuario</div>
+  }
+
   return (
     <div className="w-full">
       <div className="flex flex-col items-center py-4 border-b">
         <Avatar className="h-16 w-16 mb-2">
-          <AvatarImage src={user.avatarURL} alt={user.name} />
-          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+          <AvatarFallback>{user.name ? user.name.charAt(0) : 'U'}</AvatarFallback>
         </Avatar>
-        <h2 className="text-lg font-semibold">{user.name}</h2>
-        <p className="text-sm text-muted-foreground">{user.phone}</p>
+        <h2 className="text-lg font-semibold">{user.name || 'Usuario'}</h2>
+        <p className="text-sm text-muted-foreground">{user.mobile || 'No phone'}</p>
       </div>
       
       <div className="p-2">

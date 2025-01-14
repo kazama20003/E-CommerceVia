@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Sparkles } from 'lucide-react'
 import {
   Avatar,
-  AvatarFallback,
+  AvatarFallback
 } from "@/components/ui/avatar"
 import {
   DropdownMenu,

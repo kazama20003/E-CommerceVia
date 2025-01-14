@@ -58,7 +58,7 @@ export default function MenuTabs({ isMobile = false }: MenuTabsProps) {
         'text-sm md:text-base font-medium transition-colors duration-200 px-3 py-2 rounded-md',
         activeTab === category._id
           ? 'bg-orange-500 text-white'
-          : 'text-gray-600 hover:bg-orange-100'
+          : 'text-gray-600 hover:bg-orange-100 hover:text-orange-600'
       )}
     >
       {category.name}
@@ -68,7 +68,7 @@ export default function MenuTabs({ isMobile = false }: MenuTabsProps) {
   const SubCategoryList = ({ items, categoryName }: { items: SubCategory[], categoryName: string }) => (
     <ul className={cn(
       "space-y-1",
-      isMobile && "pl-3" // Add left padding for mobile view
+      isMobile && "pl-3"
     )}>
       {items.map((item) => (
         <li key={item._id}>
@@ -117,6 +117,10 @@ export default function MenuTabs({ isMobile = false }: MenuTabsProps) {
             <h2 className="font-bold mb-4 text-xl text-gray-800">Subcategorías</h2>
             <SubCategoryList items={activeCategory.subCategory} categoryName={activeCategory.name} />
           </div>
+          <div className="w-full md:w-1/2">
+            <h2 className="font-bold mb-4 text-xl text-gray-800">Descripción</h2>
+            <p className="text-sm text-gray-600">{activeCategory.description}</p>
+          </div>
         </div>
       </div>
     )
@@ -126,22 +130,22 @@ export default function MenuTabs({ isMobile = false }: MenuTabsProps) {
     <Accordion 
       type="single" 
       collapsible 
-      className="w-full space-y-0 rounded-lg overflow-hidden"
+      className="w-full space-y-2 rounded-lg overflow-hidden"
     >
       {categories.map((category) => (
         <AccordionItem 
           value={category._id} 
           key={category._id} 
-          className="border-0 bg-transparent"
+          className="border-b border-gray-200 last:border-b-0"
         >
-          <AccordionTrigger className="hover:no-underline py-2 px-3 text-sm rounded-md hover:bg-orange-100 hover:text-orange-600 transition-colors data-[state=open]:bg-orange-100 data-[state=open]:text-orange-600">
+          <AccordionTrigger className="hover:no-underline py-3 px-4 text-sm font-medium rounded-md hover:bg-orange-100 hover:text-orange-600 transition-colors data-[state=open]:bg-orange-100 data-[state=open]:text-orange-600">
             {category.name}
           </AccordionTrigger>
-          <AccordionContent className="pb-1 pt-1">
+          <AccordionContent className="pb-3 pt-1 px-4">
             <SubCategoryList 
               items={category.subCategory} 
               categoryName={category.name} 
-              />
+            />
           </AccordionContent>
         </AccordionItem>
       ))}
@@ -150,14 +154,14 @@ export default function MenuTabs({ isMobile = false }: MenuTabsProps) {
 
   return (
     <div className={cn(
-      "w-full",
-      isMobile ? "px-0" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+      "w-full bg-white",
+      isMobile ? "px-0" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
     )}>
       {isMobile ? (
         renderMobileContent()
       ) : (
         <>
-          <nav className="flex flex-wrap justify-center gap-2 py-4 mb-6 border-b border-gray-200">
+          <nav className="flex flex-wrap justify-center gap-2 py-4 mb-6 border-b border-gray-200 overflow-x-auto">
             {categories.map((category) => (
               <TabButton key={category._id} category={category} />
             ))}

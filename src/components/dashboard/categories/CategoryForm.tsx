@@ -14,6 +14,12 @@ import { X, Upload, AlertCircle } from 'lucide-react'
 import { axiosInstance } from '@/lib/axiosInstance'
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import Image from 'next/image'
+
+interface Image {
+  url: string;
+  id: string;
+}
 
 interface SubCategory {
   _id: string;
@@ -26,12 +32,11 @@ interface Category {
   name: string;
   description: string;
   subCategory: SubCategory[];
-  image: {
-    url: string;
-    id: string;
-  };
+  image: Image;
   status: 'Active' | 'Inactive';
 }
+
+type Status = 'Active' | 'Inactive';
 
 interface CategoryFormProps {
   open: boolean;
@@ -40,45 +45,51 @@ interface CategoryFormProps {
   initialCategory: Category | null;
 }
 
+interface ImageUploadProps {
+  imageUrl: string;
+  setFieldValue: (field: string, value: Image) => void;
+  values: Category;
+}
+
 const CategorySchema = Yup.object().shape({
-  name: Yup.string().required('Category name is required'),
-  description: Yup.string().required('Description is required'),
-  status: Yup.string().oneOf(['Active', 'Inactive']).required('Status is required'),
+  name: Yup.string().required('El nombre de la categoría es obligatorio'),
+  description: Yup.string().required('La descripción es obligatoria'),
+  status: Yup.string().oneOf(['Active', 'Inactive']).required('El estado es obligatorio'),
 })
 
-function ImageUpload({ imageUrl, setFieldValue, values }: { imageUrl: string, setFieldValue: (field: string, value: any) => void, values: any }) {
-  const { toast } = useToast()
-  const [isDragging, setIsDragging] = useState(false)
+const ImageUpload = ({ imageUrl, setFieldValue, values }: ImageUploadProps) => {
+  const { toast } = useToast();
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleImageUpload = useCallback(async (file: File) => {
-    const formData = new FormData()
-    formData.append('file', file)
+    const formData = new FormData();
+    formData.append('file', file);
 
     try {
-      // Delete the previous image if it exists
       if (values.image.id) {
-        await axiosInstance.delete(`/upload/${values.image.id}`)
+        await axiosInstance.delete(`/upload/${values.image.id}`);
       }
 
       const response = await axiosInstance.post('/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-      })
+      });
+
       setFieldValue('image', {
         url: response.data.result.secure_url,
-        id: response.data.result.public_id
-      })
+        id: response.data.result.public_id,
+      });
     } catch (error) {
-      console.error('Error handling image:', error)
+      console.error('Error al manejar la imagen:', error);
       toast({
-        title: "Error handling image",
-        description: "Please try again",
+        title: "Error al procesar la imagen",
+        description: "Por favor, inténtalo de nuevo",
         variant: "destructive",
-      })
+      });
     }
-  }, [setFieldValue, toast, values.image.id])
-
+  }, [setFieldValue, toast, values.image.id]);
+  
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
@@ -90,7 +101,7 @@ function ImageUpload({ imageUrl, setFieldValue, values }: { imageUrl: string, se
 
   return (
     <div className="space-y-4">
-      <Label htmlFor="image-upload">Category Image</Label>
+      <Label htmlFor="image-upload">Imagen de la Categoría</Label>
       <div
         className={`relative border-2 border-dashed rounded-lg p-4 transition-colors ${
           isDragging ? 'border-primary bg-primary/5' : 'border-border'
@@ -115,10 +126,12 @@ function ImageUpload({ imageUrl, setFieldValue, values }: { imageUrl: string, se
 
         {imageUrl ? (
           <div className="relative group">
-            <img 
-              src={imageUrl} 
-              alt="Category preview" 
-              className="w-full h-48 object-contain rounded-md"
+            <Image
+              src={imageUrl || "/placeholder.svg"}
+              alt="Vista previa de la categoría"
+              width={500}
+              height={200}
+              className="object-contain rounded-md"
             />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center">
               <Button
@@ -127,7 +140,7 @@ function ImageUpload({ imageUrl, setFieldValue, values }: { imageUrl: string, se
                 size="sm"
                 onClick={() => setFieldValue('image', { url: '', id: '' })}
               >
-                Change Image
+                Cambiar Imagen
               </Button>
             </div>
           </div>
@@ -137,8 +150,8 @@ function ImageUpload({ imageUrl, setFieldValue, values }: { imageUrl: string, se
             className="flex flex-col items-center justify-center h-48 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
           >
             <Upload className="h-8 w-8 mb-2" />
-            <span className="text-sm font-medium">Drop an image here or click to upload</span>
-            <span className="text-xs mt-1">PNG, JPG up to 10MB</span>
+            <span className="text-sm font-medium">Arrastra una imagen aquí o haz clic para subir</span>
+            <span className="text-xs mt-1">PNG, JPG hasta 10MB</span>
           </label>
         )}
       </div>
@@ -149,23 +162,25 @@ function ImageUpload({ imageUrl, setFieldValue, values }: { imageUrl: string, se
 export function CategoryForm({ open, onOpenChange, onSubmit, initialCategory }: CategoryFormProps) {
   const { toast } = useToast()
   const [subCategories, setSubCategories] = useState<SubCategory[]>([])
-  const [newSubCategoryName, setNewSubCategoryName] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(open)
 
   const fetchSubCategories = useCallback(async (categoryId: string) => {
     try {
       const response = await axiosInstance.get(`/categories/${categoryId}/subcategories`)
       setSubCategories(response.data)
     } catch (error) {
-      console.error('Error fetching subcategories:', error)
+      console.error('Error al obtener subcategorías:', error)
       toast({
-        title: "Error fetching subcategories",
-        description: "Please try again",
+        title: "Error al obtener las subcategorías",
+        description: "Por favor, inténtalo de nuevo",
         variant: "destructive",
       })
     }
   }, [toast])
 
   useEffect(() => {
+    setInternalOpen(open)
     if (open && initialCategory?._id) {
       fetchSubCategories(initialCategory._id)
     } else {
@@ -182,7 +197,17 @@ export function CategoryForm({ open, onOpenChange, onSubmit, initialCategory }: 
     status: initialCategory?.status ?? 'Active',
   }), [initialCategory])
 
+  const handleDialogClose = useCallback(() => {
+    setInternalOpen(false);
+    onOpenChange(false);
+    setSubCategories([]);
+    setIsSubmitting(false);
+  }, [onOpenChange]);
+
   const handleSubmit = useCallback(async (values: Omit<Category, '_id'> & { _id?: string }) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     try {
       const categoryData = {
         name: values.name,
@@ -191,98 +216,64 @@ export function CategoryForm({ open, onOpenChange, onSubmit, initialCategory }: 
         status: values.status,
       };
 
-      let response;
+      let savedCategory: Category;
       if (values._id) {
-        response = await axiosInstance.put(`/categories/${values._id}`, categoryData);
+        const response = await axiosInstance.put(`/categories/${values._id}`, categoryData);
+        savedCategory = response.data;
       } else {
-        response = await axiosInstance.post('/categories', categoryData);
+        const response = await axiosInstance.post('/categories', categoryData);
+        savedCategory = response.data;
       }
 
-      const savedCategory: Category = response.data;
-
-      // Handle subcategories
-      const updatedSubCategories = await Promise.all(
-        subCategories.map(async (subCategory) => {
-          if (subCategory._id.startsWith('temp_')) {
-            const newSubCategoryResponse = await axiosInstance.post(`/categories/${savedCategory._id}/subcategories`, {
-              name: subCategory.name,
-            });
-            return newSubCategoryResponse.data;
-          }
-          return subCategory;
-        })
-      );
-
-      onSubmit({
-        ...savedCategory,
-        subCategory: updatedSubCategories,
-      });
+      onSubmit(savedCategory);
 
       toast({
-        title: "Category submitted successfully",
-        description: "The category has been added/updated.",
+        title: "Categoría enviada con éxito",
+        description: "La categoría ha sido añadida/actualizada.",
       });
-      onOpenChange(false);
+      handleDialogClose();
     } catch (error) {
-      console.error('Error submitting category:', error);
+      console.error('Error al enviar la categoría:', error);
       toast({
-        title: "Error submitting category",
-        description: error instanceof Error ? error.message : "Please try again",
+        title: "Error al enviar la categoría",
+        description: error instanceof Error ? error.message : "Por favor, inténtalo de nuevo",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [onSubmit, onOpenChange, subCategories, toast]);
-
-  const handleAddSubCategory = useCallback(() => {
-    if (newSubCategoryName.trim() === '') return;
-
-    const newSubCategory: SubCategory = {
-      _id: `temp_${Date.now()}`, // Temporary ID
-      name: newSubCategoryName,
-      category: initialCategory ? [initialCategory._id] : [],
-    };
-
-    setSubCategories(prev => [...prev, newSubCategory]);
-    setNewSubCategoryName('');
-  }, [newSubCategoryName, initialCategory]);
+  }, [onSubmit, toast, isSubmitting, handleDialogClose]);
 
   const handleRemoveSubCategory = useCallback(async (subCategoryId: string) => {
     if (!initialCategory?._id) return;
 
     try {
-      // Update the API endpoint to match the server's expected format
       await axiosInstance.delete(`/categories/${initialCategory._id}/subcategories/${subCategoryId}`);
     
       setSubCategories(prev => prev.filter(sc => sc._id !== subCategoryId));
       toast({
-        title: "Subcategory removed successfully",
-        description: "The subcategory has been removed.",
+        title: "Subcategoría eliminada con éxito",
+        description: "La subcategoría ha sido eliminada.",
       });
     } catch (error) {
-      console.error('Error removing subcategory:', error);
+      console.error('Error al eliminar la subcategoría:', error);
       toast({
-        title: "Error removing subcategory",
-        description: "Please try again. If the problem persists, contact support.",
+        title: "Error al eliminar la subcategoría",
+        description: "Por favor, inténtalo de nuevo. Si el problema persiste, contacta con soporte.",
         variant: "destructive",
       });
     }
   }, [initialCategory, toast]);
 
-  const handleDialogClose = useCallback(() => {
-    onOpenChange(false);
-    setSubCategories([]);
-    setNewSubCategoryName('');
-  }, [onOpenChange]);
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={internalOpen} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-[600px] p-0 overflow-auto max-h-[90vh]">
         <DialogHeader className="p-6 border-b bg-muted/10 sticky top-0 z-10">
           <DialogTitle className="text-xl">
-            {initialCategory ? 'Edit Category' : 'Add New Category'}
+            {initialCategory ? 'Editar Categoría' : 'Añadir Nueva Categoría'}
           </DialogTitle>
           <DialogDescription>
-            {initialCategory ? 'Update the details of an existing category.' : 'Create a new category for your products.'}
+            {initialCategory ? 'Actualiza los detalles de una categoría existente.' : 'Crea una nueva categoría para tus productos.'}
           </DialogDescription>
           <DialogClose onClick={handleDialogClose} />
         </DialogHeader>
@@ -297,7 +288,7 @@ export function CategoryForm({ open, onOpenChange, onSubmit, initialCategory }: 
             <Form className="space-y-6 p-6">
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Category Name</Label>
+                  <Label htmlFor="name">Nombre de la Categoría</Label>
                   <Field 
                     name="name" 
                     as={Input} 
@@ -313,22 +304,22 @@ export function CategoryForm({ open, onOpenChange, onSubmit, initialCategory }: 
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
+                  <Label htmlFor="status">Estado</Label>
                   <Field name="status">
-                    {({ field }: { field: any }) => (
-                      <Select 
-                        onValueChange={(value) => setFieldValue('status', value)} 
-                        defaultValue={field.value}
-                      >
+                  {({ field }: { field: { value: Status } }) => (
+                    <Select
+                      onValueChange={(value: Status) => setFieldValue('status', value)} 
+                      defaultValue={field.value}
+                    >
                         <SelectTrigger 
                           id="status"
                           className={errors.status && touched.status ? "border-destructive" : ""}
                         >
-                          <SelectValue placeholder="Select status" />
+                          <SelectValue placeholder="Seleccionar estado" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Active">Active</SelectItem>
-                          <SelectItem value="Inactive">Inactive</SelectItem>
+                          <SelectItem value="Active">Activo</SelectItem>
+                          <SelectItem value="Inactive">Inactivo</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -343,7 +334,7 @@ export function CategoryForm({ open, onOpenChange, onSubmit, initialCategory }: 
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">Descripción</Label>
                 <Field 
                   name="description" 
                   as={Textarea} 
@@ -366,7 +357,7 @@ export function CategoryForm({ open, onOpenChange, onSubmit, initialCategory }: 
 
               {initialCategory && (
                 <div className="space-y-4">
-                  <Label>Subcategories</Label>
+                  <Label>Subcategorías</Label>
                   <div className="flex flex-wrap gap-2">
                     {subCategories.map((subCategory) => (
                       <Badge 
@@ -379,28 +370,12 @@ export function CategoryForm({ open, onOpenChange, onSubmit, initialCategory }: 
                           type="button"
                           onClick={() => handleRemoveSubCategory(subCategory._id)}
                           className="text-muted-foreground hover:text-foreground transition-colors"
-                          aria-label={`Remove ${subCategory.name}`}
+                          aria-label={`Eliminar ${subCategory.name}`}
                         >
                           <X size={14} />
                         </button>
                       </Badge>
                     ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={newSubCategoryName}
-                      onChange={(e) => setNewSubCategoryName(e.target.value)}
-                      placeholder="Add a subcategory"
-                      className="flex-1"
-                      aria-label="New subcategory name"
-                    />
-                    <Button 
-                      type="button" 
-                      onClick={handleAddSubCategory}
-                      variant="outline"
-                    >
-                      Add
-                    </Button>
                   </div>
                 </div>
               )}
@@ -410,11 +385,12 @@ export function CategoryForm({ open, onOpenChange, onSubmit, initialCategory }: 
                   type="button"
                   variant="outline"
                   onClick={handleDialogClose}
+                  disabled={isSubmitting}
                 >
-                  Cancel
+                  Cancelar
                 </Button>
-                <Button type="submit">
-                  {initialCategory ? 'Update' : 'Create'} Category
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Enviando...' : (initialCategory ? 'Actualizar' : 'Crear')} Categoría
                 </Button>
               </DialogFooter>
             </Form>

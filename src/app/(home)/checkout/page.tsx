@@ -66,6 +66,47 @@ interface ShippingAddress {
   streetAddress: string;
 }
 
+interface OrderData {
+  paymentType: string;
+  orderType: string;
+  items: {
+    productName: string;
+    productImage: string;
+    color: string;
+    size: string;
+    price: number;
+    quantity: number;
+    sku: string;
+  }[];
+  shippingAddress: {
+    fullName: string;
+    email: string;
+    phone: string;
+    addressLine1: string;
+    addressLine2: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  billingAddress?: {
+    fullName: string;
+    email: string;
+    phone: string;
+    addressLine1: string;
+    addressLine2: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  subtotal: number;
+  tax: number;
+  discount: number;
+  shippingCharge: number;
+  total: number;
+}
+
 export default function CheckoutPage() {
   const [step, setStep] = useState<'cart' | 'address' | 'payment'>('cart')
   const [cartData, setCartData] = useState<CartData | null>(null)
@@ -95,6 +136,7 @@ export default function CheckoutPage() {
         throw new Error('No cart data received')
       }
     } catch (error) {
+      console.error('Failed to fetch cart data:', error)
       toast({
         title: "Error",
         description: "Failed to fetch cart data. Please try again.",
@@ -122,6 +164,7 @@ export default function CheckoutPage() {
         setShippingAddress(response.data.user.shippingAddress)
       }
     } catch (error) {
+      console.error('Failed to fetch shipping address:', error)
       toast({
         title: "Error",
         description: "Failed to fetch shipping address. Please try again.",
@@ -151,6 +194,7 @@ export default function CheckoutPage() {
         quantity: updatedItems.find(item => item._id === itemId)?.quantity
       })
     } catch (error) {
+      console.error('Failed to update item quantity:', error)
       toast({
         title: "Error",
         description: "Failed to update item quantity. Please try again.",
@@ -173,6 +217,7 @@ export default function CheckoutPage() {
         description: "The item has been removed from your cart.",
       })
     } catch (error) {
+      console.error('Failed to remove item:', error)
       toast({
         title: "Error",
         description: "Failed to remove item. Please try again.",
@@ -203,6 +248,7 @@ export default function CheckoutPage() {
         description: "Your new shipping address has been saved successfully.",
       })
     } catch (error) {
+      console.error('Failed to save address:', error)
       toast({
         title: "Error",
         description: "Failed to save address. Please try again.",
@@ -231,6 +277,7 @@ export default function CheckoutPage() {
           description: "Your shipping address has been set as your billing address.",
         })
       } catch (error) {
+        console.error('Failed to save billing address:', error)
         toast({
           title: "Error",
           description: "Failed to save billing address. Please try again.",
@@ -260,6 +307,7 @@ export default function CheckoutPage() {
         description: "Your shipping address has been removed.",
       })
     } catch (error) {
+      console.error('Failed to delete shipping address:', error)
       toast({
         title: "Error",
         description: "Failed to delete shipping address. Please try again.",
@@ -287,6 +335,7 @@ export default function CheckoutPage() {
         description: "Your billing address has been removed.",
       })
     } catch (error) {
+      console.error('Failed to delete billing address:', error)
       toast({
         title: "Error",
         description: "Failed to delete billing address. Please try again.",
@@ -314,7 +363,7 @@ export default function CheckoutPage() {
       // Set the token in the headers for all requests
       axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-      const orderData = {
+      const orderData: OrderData = {
         paymentType: paymentMethod, 
         orderType: paymentMethod,
         items: cartData.items.map(item => {
@@ -467,12 +516,12 @@ export default function CheckoutPage() {
   )
 }
 
-const formatWhatsAppMessage = (orderData: any) => {
+const formatWhatsAppMessage = (orderData: OrderData) => {
   let message = "🛒 *Nueva Orden*\n\n";
   message += `👤 *Cliente:* ${orderData.shippingAddress.fullName}\n`;
   message += `📞 *Teléfono:* ${orderData.shippingAddress.phone}\n\n`;
   message += "*Productos:*\n";
-  orderData.items.forEach((item: any, index: number) => {
+  orderData.items.forEach((item, index) => {
     message += `${index + 1}. ${item.productName}\n`;
     message += `   Cantidad: ${item.quantity}\n`;
     message += `   Precio: $${item.price.toFixed(2)}\n`;

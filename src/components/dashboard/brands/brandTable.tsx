@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
+import Image from 'next/image'
 interface Brand {
   _id: string
   name: string
@@ -47,11 +47,13 @@ export function BrandTable({ brands, onEdit, onDelete }: BrandTableProps) {
               <TableCell className="hidden md:table-cell">{brand.description}</TableCell>
               <TableCell>
                 {brand.image && brand.image.url ? (
-                  <img 
-                    src={brand.image.url} 
-                    alt={`Image for ${brand.name}`} 
-                    className="w-10 h-10 object-cover rounded"
-                  />
+                  <Image
+                  src={brand.image.url}
+                  alt={`Image for ${brand.name}`}
+                  width={40}   // Ajusta el ancho según lo que necesites
+                  height={40}  // Ajusta la altura según lo que necesites
+                  className="object-cover rounded"
+                />
                 ) : (
                   <span className="text-muted-foreground">No image</span>
                 )}

@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import {jwtDecode} from "jwt-decode";
 
+interface DecodedToken {
+  role: string;
+  // Agrega otras propiedades según sea necesario
+}
+
 export function middleware(request: NextRequest) {
   const encryptedToken = request.cookies.get("token")?.value || ""; // Obtiene el token de la cookie
   const { pathname, origin } = request.nextUrl;
@@ -16,7 +21,7 @@ export function middleware(request: NextRequest) {
   // Si hay token, decodificarlo y verificar el rol
   if (encryptedToken) {
     try {
-      const decoded: any = jwtDecode(encryptedToken);
+      const decoded: DecodedToken = jwtDecode(encryptedToken);
 
       // Redirigir si el rol no es "admin" y está accediendo al dashboard
       if (isDashboardRoute && decoded.role !== "admin") {

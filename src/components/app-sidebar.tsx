@@ -2,10 +2,8 @@
 
 import * as React from "react"
 import { BookOpen, Bot, Command, Frame, LifeBuoy, Map, PieChart, Send, SquareTerminal, Tag, ShoppingCart } from 'lucide-react'
-import Link from "next/link"
+
 import { NavMain } from "./nav-main"
-import { NavOrders } from "./nav-orders"
-import { NavProjects } from "./nav-projects"
 import { NavSecondary } from "./nav-secondary"
 import { NavUser } from "./nav-user"
 import {
@@ -17,45 +15,42 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import Link from "next/link"
 
 const data = {
   navMain: [
     {
-      title: "Dashboard",
-      url: "/dashboard",
+      title: "Cuentas",
+      url: "/accounts",
       icon: SquareTerminal,
       isActive: true,
     },
     {
-      title: "Categorias",
-      url: "/dashboard/categories",
+      title: "Historial",
+      url: "/accounts/orderHistory",
+      icon: SquareTerminal,
+      isActive: false,
+    },
+    {
+      title: "Retornadas",
+      url: "/accounts/returnOrders",
       icon: Bot,
     },
     {
-      title: "Productos",
-      url: "/dashboard/products",
+      title: "Información",
+      url: "/accounts/info",
       icon: BookOpen,
     },
     {
-      title: "Marcas",
-      url: "/dashboard/brands",
+      title: "Contraseñas",
+      url: "/accounts/changePassword",
       icon: Tag,
     },
   ],
   navOrders: [
     {
-      title: "Ver pedidos",
-      url: "/dashboard/orders",
-      icon: ShoppingCart,
-    },
-    {
-      title: "Ordenes de devolución",
-      url: "/dashboard/returnOrders",
-      icon: ShoppingCart,
-    },
-    {
-      title: "Devoluciones y reembolsos",
-      url: "/dashboard/returnRefunds",
+      title: "Correos",
+      url: "/accounts/address",
       icon: ShoppingCart,
     },
   ],
@@ -112,8 +107,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavOrders items={data.navOrders} />
-        <NavProjects projects={data.projects} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

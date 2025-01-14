@@ -47,10 +47,12 @@ interface Order {
 
 export default function OrderHistory() {
   const [orders, setOrders] = useState<Order[]>([])
-  const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
+  const [expandedOrderIds, setExpandedOrderIds] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
     fetchOrders()
   }, [])
 
@@ -76,7 +78,11 @@ export default function OrderHistory() {
   }
 
   const toggleOrderDetails = (orderId: string) => {
-    setExpandedOrder(expandedOrder === orderId ? null : orderId)
+    setExpandedOrderIds(prevIds => 
+      prevIds.includes(orderId) 
+        ? prevIds.filter(id => id !== orderId)
+        : [...prevIds, orderId]
+    )
   }
 
   const cancelOrder = async (orderId: string) => {
@@ -119,6 +125,10 @@ export default function OrderHistory() {
       case "Refunded": return "outline"
       default: return "default"
     }
+  }
+
+  if (!isMounted) {
+    return null; // or a loading placeholder
   }
 
   if (isLoading) {
@@ -197,7 +207,7 @@ export default function OrderHistory() {
                   size="sm"
                   onClick={() => toggleOrderDetails(order._id)}
                 >
-                  {expandedOrder === order._id ? (
+                  {expandedOrderIds.includes(order._id) ? (
                     <ChevronUp className="h-4 w-4" />
                   ) : (
                     <ChevronDown className="h-4 w-4" />
@@ -206,7 +216,7 @@ export default function OrderHistory() {
               </CardTitle>
               <CardDescription>{new Date(order.orderDate).toLocaleString()}</CardDescription>
             </CardHeader>
-            {expandedOrder === order._id && (
+            {expandedOrderIds.includes(order._id) && (
               <CardContent>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="font-medium">Products:</div>

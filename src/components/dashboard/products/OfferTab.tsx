@@ -111,8 +111,8 @@ export const OfferTab = () => {
       }
     };
 
-    fetchOffer()
-  }, [productId])
+    fetchOffer();
+  }, [productId, formik]);
 
   const renderError = (fieldName: keyof typeof formik.errors) => {
     if (formik.touched[fieldName] && formik.errors[fieldName]) {

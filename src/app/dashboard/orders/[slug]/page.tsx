@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ArrowLeft, Clock, CreditCard, Package2 } from 'lucide-react'
+import { ArrowLeft, Clock, CreditCard, Package2, PenToolIcon as Tool } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 type OrderStatus = "Pending" | "Accepted" | "Shipped" | "On the way" | "Delivered" | "Cancelled" | "Returned" | "Refunded"
@@ -25,10 +25,11 @@ type ReturnStatus = "Pending" | "Processed" | "Rejected"
 interface OrderItem {
   productName: string
   productImage: string
-  size: string
-  color: string
+  brand: string
+  model: string
   price: number
   quantity: number
+  unit: string
 }
 
 interface OrderDetails {
@@ -46,6 +47,7 @@ interface OrderDetails {
   discount: number
   shippingCharge: number
   total: number
+  category: string
   shippingAddress: {
     fullName: string
     email: string
@@ -91,7 +93,7 @@ export default function OrderDetailsPage() {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load order details"
+          description: "No se pudo cargar los detalles del pedido"
         })
       } finally {
         setIsLoading(false)
@@ -115,8 +117,8 @@ export default function OrderDetailsPage() {
       if (response.data && response.data.data) {
         setOrder(response.data.data)
         toast({
-          title: "Status Updated",
-          description: `Order status has been updated to ${newStatus}`,
+          title: "Estado Actualizado",
+          description: `El estado del pedido ha sido actualizado a ${newStatus}`,
         })
       }
     } catch (error) {
@@ -124,14 +126,14 @@ export default function OrderDetailsPage() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update order status"
+        description: "No se pudo actualizar el estado del pedido"
       })
     } finally {
       setIsUpdating(false)
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: OrderStatus) => {
     switch (status.toLowerCase()) {
       case 'accepted':
         return 'bg-green-100 text-green-800'
@@ -154,6 +156,20 @@ export default function OrderDetailsPage() {
     }
   }
 
+  const translateStatus = (status: OrderStatus): string => {
+    const statusTranslations: { [key in OrderStatus]: string } = {
+      "Pending": "Pendiente",
+      "Accepted": "Aceptado",
+      "Shipped": "Enviado",
+      "On the way": "En camino",
+      "Delivered": "Entregado",
+      "Cancelled": "Cancelado",
+      "Returned": "Devuelto",
+      "Refunded": "Reembolsado"
+    }
+    return statusTranslations[status] || status
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -165,191 +181,194 @@ export default function OrderDetailsPage() {
   if (!order) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <h1 className="text-2xl font-bold">Order not found</h1>
+        <h1 className="text-2xl font-bold">Pedido no encontrado</h1>
         <Button onClick={() => router.back()} className="mt-4">
-          Go Back
+          Volver
         </Button>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mb-6">
-        <Button
-          variant="ghost"
-          className="mb-4"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Orders
-        </Button>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">
-              Order ID: {order.orderId}
-            </h1>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className={getStatusColor(order.orderStatus)}>
-                {order.orderStatus}
-              </Badge>
-              <Badge variant="secondary">
-                {order.orderType}
-              </Badge>
-              {order.returnStatus !== "Pending" && (
-                <Badge variant="outline">
-                  Return {order.returnStatus}
+    <div className="container mx-auto py-8 px-4 max-w-7xl">
+      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div className="p-6 border-b border-gray-200">
+          <Button
+            variant="ghost"
+            className="mb-4"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Volver a Pedidos
+          </Button>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">
+                Pedido: {order.orderId}
+              </h1>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className={getStatusColor(order.orderStatus)}>
+                  {translateStatus(order.orderStatus)}
                 </Badge>
-              )}
+                <Badge variant="secondary">
+                  {order.orderType}
+                </Badge>
+                {order.returnStatus !== "Pending" && (
+                  <Badge variant="outline">
+                    Devolución {translateStatus(order.returnStatus as OrderStatus)}
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select
+                value={order.orderStatus}
+                onValueChange={(value: OrderStatus) => updateOrderStatus(value)}
+                disabled={isUpdating}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Actualizar Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["Pending", "Accepted", "Shipped", "On the way", "Delivered", "Cancelled", "Returned", "Refunded"].map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {translateStatus(status as OrderStatus)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Select
-              value={order.orderStatus}
-              onValueChange={(value: OrderStatus) => updateOrderStatus(value)}
-              disabled={isUpdating}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Update Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="Accepted">Accept</SelectItem>
-                <SelectItem value="Shipped">Shipped</SelectItem>
-                <SelectItem value="On the way">On the way</SelectItem>
-                <SelectItem value="Delivered">Delivered</SelectItem>
-                <SelectItem value="Cancelled">Cancel</SelectItem>
-                <SelectItem value="Returned">Returned</SelectItem>
-                <SelectItem value="Refunded">Refunded</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex flex-wrap gap-4 mt-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              {format(new Date(order.createdAt), 'dd/MM/yyyy HH:mm:ss')}
+            </div>
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Método de pago: {order.paymentType}
+            </div>
+            <div className="flex items-center gap-2">
+              <Package2 className="h-4 w-4" />
+              Tipo de pedido: {order.orderType}
+            </div>
+            <div className="flex items-center gap-2">
+              <Tool className="h-4 w-4" />
+              Categoría: {order.category}
+            </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-4 mt-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            {format(new Date(order.createdAt), 'yyyy-MM-dd HH:mm:ss')}
-          </div>
-          <div className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            Payment Type: {order.paymentType}
-          </div>
-          <div className="flex items-center gap-2">
-            <Package2 className="h-4 w-4" />
-            Order Type: {order.orderType}
-          </div>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Order Details</h2>
-            <div className="space-y-4">
-              {order.items.map((item, index) => (
-                <div key={index} className="flex gap-4">
-                  <div className="h-16 w-16 bg-gray-100 rounded">
-                    <Image
-                      src={item.productImage}
-                      alt={item.productName}
-                      width={60}
-                      height={60}
-                      className="w-full h-full object-cover rounded"
-                    />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2 shadow-md">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Detalles del Pedido</h2>
+              <div className="space-y-4">
+                {order.items.map((item, index) => (
+                  <div key={index} className="flex gap-4">
+                    <div className="h-16 w-16 bg-gray-100 rounded">
+                      <Image
+                        src={item.productImage}
+                        alt={item.productName}
+                        width={60}
+                        height={60}
+                        className="w-full h-full object-cover rounded"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium">{item.productName}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {item.brand} / {item.model}
+                      </p>
+                      <p className="text-sm">S/{item.price.toFixed(2)} x {item.quantity} {item.unit}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium">{item.productName}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {item.color} / {item.size}
-                    </p>
-                    <p className="text-sm">₹{item.price.toFixed(2)} x {item.quantity}</p>
-                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-md">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Detalles de Precio</h2>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>S/{order.subtotal.toFixed(2)}</span>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <div className="flex justify-between">
+                  <span>IGV</span>
+                  <span>S/{order.tax.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Descuento</span>
+                  <span>-S/{order.discount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Costo de Envío</span>
+                  <span>S/{order.shippingCharge.toFixed(2)}</span>
+                </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between font-semibold">
+                  <span>Total</span>
+                  <span>S/{order.total.toFixed(2)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Price Details</h2>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>₹{order.subtotal.toFixed(2)}</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <Card className="shadow-md">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Dirección de Envío</h2>
+              <div className="space-y-2">
+                <p className="font-medium">{order.shippingAddress.fullName}</p>
+                <p className="text-sm text-muted-foreground">
+                  {order.shippingAddress.email}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {order.shippingAddress.phone}
+                </p>
+                <p className="text-sm">
+                  {order.shippingAddress.addressLine1}
+                  {order.shippingAddress.addressLine2 && (
+                    <>, {order.shippingAddress.addressLine2}</>
+                  )}
+                </p>
+                <p className="text-sm">
+                  {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.postalCode}
+                </p>
+                <p className="text-sm">{order.shippingAddress.country}</p>
               </div>
-              <div className="flex justify-between">
-                <span>Tax Fee</span>
-                <span>₹{order.tax.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Discount</span>
-                <span>-₹{order.discount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Shipping Charge</span>
-                <span>₹{order.shippingCharge.toFixed(2)}</span>
-              </div>
-              <Separator className="my-2" />
-              <div className="flex justify-between font-semibold">
-                <span>Total</span>
-                <span>₹{order.total.toFixed(2)}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Shipping Address</h2>
-            <div className="space-y-2">
-              <p className="font-medium">{order.shippingAddress.fullName}</p>
-              <p className="text-sm text-muted-foreground">
-                {order.shippingAddress.email}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {order.shippingAddress.phone}
-              </p>
-              <p className="text-sm">
-                {order.shippingAddress.addressLine1}
-                {order.shippingAddress.addressLine2 && (
-                  <>, {order.shippingAddress.addressLine2}</>
-                )}
-              </p>
-              <p className="text-sm">
-                {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.postalCode}
-              </p>
-              <p className="text-sm">{order.shippingAddress.country}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Billing Address</h2>
-            <div className="space-y-2">
-              <p className="font-medium">{order.billingAddress.fullName}</p>
-              <p className="text-sm text-muted-foreground">
-                {order.billingAddress.email}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {order.billingAddress.phone}
-              </p>
-              <p className="text-sm">
-                {order.billingAddress.addressLine1}
-                {order.billingAddress.addressLine2 && (
-                  <>, {order.billingAddress.addressLine2}</>
-                )}
-              </p>
-              <p className="text-sm">
-                {order.billingAddress.city}, {order.billingAddress.state} {order.billingAddress.postalCode}
-              </p>
-              <p className="text-sm">{order.billingAddress.country}</p>
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="shadow-md">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Dirección de Facturación</h2>
+              <div className="space-y-2">
+                <p className="font-medium">{order.billingAddress.fullName}</p>
+                <p className="text-sm text-muted-foreground">
+                  {order.billingAddress.email}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {order.billingAddress.phone}
+                </p>
+                <p className="text-sm">
+                  {order.billingAddress.addressLine1}
+                  {order.billingAddress.addressLine2 && (
+                    <>, {order.billingAddress.addressLine2}</>
+                  )}
+                </p>
+                <p className="text-sm">
+                  {order.billingAddress.city}, {order.billingAddress.state} {order.billingAddress.postalCode}
+                </p>
+                <p className="text-sm">{order.billingAddress.country}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )

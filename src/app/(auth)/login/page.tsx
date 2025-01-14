@@ -3,9 +3,10 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
-import { Eye, EyeOff, Facebook, Chrome } from 'lucide-react'
+import { Eye, EyeOff, Facebook, Chrome, ArrowLeft } from 'lucide-react'
 import { Formik, Form, Field } from 'formik'
 import * as Yup from 'yup'
+import { motion } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,13 +22,32 @@ const LoginSchema = Yup.object().shape({
   password: Yup.string().required('Requerido'),
 })
 
+const pageVariants = {
+  initial: { opacity: 0 },
+  in: { opacity: 1 },
+  out: { opacity: 0 }
+}
+
+const pageTransition = {
+  type: 'tween',
+  ease: 'anticipate',
+  duration: 0.5
+}
+
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const { toast } = useToast();
   const router = useRouter();
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-[#f1974c] to-[#FF5E3A]">
+    <motion.div 
+      initial="initial"
+      animate="in"
+      exit="out"
+      variants={pageVariants}
+      transition={pageTransition}
+      className="flex min-h-screen bg-gradient-to-br from-[#f1974c] to-[#FF5E3A]"
+    >
       {/* Left Section */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#f1974c] to-[#FF5E3A] p-12 relative">
         <div className="text-white max-w-xl">
@@ -37,14 +57,20 @@ export default function LoginPage() {
           <p className="text-xl opacity-90">
             Inicie sesión para administrar su panel de comercio electrónico con facilidad.
           </p>
-          <Image
-            src="/login.png"
-            alt="Dashboard illustration"
-            width={900}
-            height={500}
-            className="absolute bottom-0 left-1/2 transform -translate-x-1/2"
-            priority
-          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <Image
+              src="/login.png"
+              alt="Dashboard illustration"
+              width={900}
+              height={500}
+              className="absolute bottom-0 left-1/2 transform -translate-x-1/2"
+              priority
+            />
+          </motion.div>
         </div>
       </div>
 
@@ -52,11 +78,21 @@ export default function LoginPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="bg-[#FF7A50] text-white p-2 rounded-lg">
-                <span className="font-bold text-xl">Via</span>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="bg-[#FF7A50] text-white p-2 rounded-lg">
+                  <span className="font-bold text-xl">Via</span>
+                </div>
+                <span className="font-bold text-2xl text-[#FF7A50]">Provisiones</span>
               </div>
-              <span className="font-bold text-2xl text-[#FF7A50]">Provisiones</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.push('/')}
+                className="text-gray-500 hover:text-[#FF7A50]"
+              >
+                <ArrowLeft size={24} />
+              </Button>
             </div>
             <CardTitle className="text-3xl font-bold">Inicie sesión en su cuenta</CardTitle>
           </CardHeader>
@@ -100,84 +136,90 @@ export default function LoginPage() {
               }}
             >
               {({ errors, touched, isSubmitting }) => (
-                <Form className="space-y-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="email">Correo electrónico</Label>
-                      <Field
-                        as={Input}
-                        id="email"
-                        type="email"
-                        name="email"
-                        placeholder="nombre@ejemplo.com"
-                        className={`w-full mt-1 ${errors.email && touched.email ? 'border-red-500' : ''}`}
-                      />
-                      {errors.email && touched.email ? (
-                        <div className="text-red-500 text-sm mt-1">{errors.email}</div>
-                      ) : null}
-                    </div>
-                    <div>
-                      <Label htmlFor="password">Contraseña</Label>
-                      <div className="relative mt-1">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.5 }}
+                >
+                  <Form className="space-y-6">
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="email">Correo electrónico</Label>
                         <Field
                           as={Input}
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          name="password"
-                          placeholder="••••••••"
-                          className={`w-full pr-10 ${errors.password && touched.password ? 'border-red-500' : ''}`}
+                          id="email"
+                          type="email"
+                          name="email"
+                          placeholder="nombre@ejemplo.com"
+                          className={`w-full mt-1 ${errors.email && touched.email ? 'border-red-500' : ''}`}
                         />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
-                        >
-                          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                        </button>
+                        {errors.email && touched.email ? (
+                          <div className="text-red-500 text-sm mt-1">{errors.email}</div>
+                        ) : null}
                       </div>
-                      {errors.password && touched.password ? (
-                        <div className="text-red-500 text-sm mt-1">{errors.password}</div>
-                      ) : null}
+                      <div>
+                        <Label htmlFor="password">Contraseña</Label>
+                        <div className="relative mt-1">
+                          <Field
+                            as={Input}
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            name="password"
+                            placeholder="••••••••"
+                            className={`w-full pr-10 ${errors.password && touched.password ? 'border-red-500' : ''}`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
+                          >
+                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                          </button>
+                        </div>
+                        {errors.password && touched.password ? (
+                          <div className="text-red-500 text-sm mt-1">{errors.password}</div>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="remember-me" />
-                      <Label htmlFor="remember-me" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Recordar Contraseña
-                      </Label>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="remember-me" />
+                        <Label htmlFor="remember-me" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          Recordar Contraseña
+                        </Label>
+                      </div>
+
+                      <Link href="/forgot-password" className="text-sm font-medium text-[#FF7A50] hover:text-[#FF5E3A]">
+                        ¿Olvidaste tu contraseña?
+                      </Link>
                     </div>
 
-                    <Link href="/forgot-password" className="text-sm font-medium text-[#FF7A50] hover:text-[#FF5E3A]">
-                      ¿Olvidaste tu contraseña?
-                    </Link>
-                  </div>
-
-                  <Button type="submit" className="w-full bg-[#FF7A50] hover:bg-[#FF5E3A] text-white" disabled={isSubmitting}>
-                    {isSubmitting ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-                  </Button>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-gray-300" />
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-white text-gray-500">O continuar con</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <Button type="button" variant="outline" className="w-full">
-                      <Chrome className="mr-2 h-4 w-4" />
-                      Google
+                    <Button type="submit" className="w-full bg-[#FF7A50] hover:bg-[#FF5E3A] text-white" disabled={isSubmitting}>
+                      {isSubmitting ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                     </Button>
-                    <Button type="button" variant="outline" className="w-full">
-                      <Facebook className="mr-2 h-4 w-4" />
-                      Facebook
-                    </Button>
-                  </div>
-                </Form>
+
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-gray-300" />
+                      </div>
+                      <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-white text-gray-500">O continuar con</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Button type="button" variant="outline" className="w-full">
+                        <Chrome className="mr-2 h-4 w-4" />
+                        Google
+                      </Button>
+                      <Button type="button" variant="outline" className="w-full">
+                        <Facebook className="mr-2 h-4 w-4" />
+                        Facebook
+                      </Button>
+                    </div>
+                  </Form>
+                </motion.div>
               )}
             </Formik>
           </CardContent>
@@ -191,7 +233,7 @@ export default function LoginPage() {
           </CardFooter>
         </Card>
       </div>
-    </div>
+    </motion.div>
   )
 }
 

@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { ImageIcon, Info, Layers, Gift, Video, Truck, Search } from 'lucide-react'
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import { axiosInstance } from '@/lib/axiosInstance'
 import axios from 'axios'
 import { InformationTab } from '@/components/dashboard/products/InformationTab'
@@ -14,11 +13,6 @@ import { OfferTab } from '@/components/dashboard/products/OfferTab'
 import { VideoTab } from '@/components/dashboard/products/VideoTab'
 import ShippingPage from '@/components/dashboard/products/ShippingTab'
 import { SEOTab } from '@/components/dashboard/products/SEOTab'
-
-interface SEOImage {
-  url: string;
-  id: string;
-}
 
 interface Variation {
   _id: string;

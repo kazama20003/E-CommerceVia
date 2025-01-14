@@ -55,7 +55,7 @@ export const VideoTab: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [productId, toast]);
+  }, [productId, toast, isLoading]);
 
   useEffect(() => {
     fetchVideos();
@@ -69,7 +69,6 @@ export const VideoTab: React.FC = () => {
       title: `${video.provider} Video` 
     };
   };
-
 
   const formik = useFormik({
     initialValues: {

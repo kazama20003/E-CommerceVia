@@ -3,6 +3,7 @@
 import { useCallback, useEffect } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
+import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -70,12 +71,12 @@ export function BrandForm({ open, onOpenChange, onSubmit, initialBrand }: BrandF
 
   useEffect(() => {
     if (initialBrand) {
-      const { _id, ...rest } = initialBrand
+      const { ...rest } = initialBrand
       formik.setValues(rest)
     } else {
       formik.resetForm()
     }
-  }, [initialBrand])
+  }, [initialBrand, formik])
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -144,7 +145,13 @@ export function BrandForm({ open, onOpenChange, onSubmit, initialBrand }: BrandF
               className="mt-1"
             />
             {formik.values.image.url && (
-              <img src={formik.values.image.url} alt="Preview" className="mt-2 w-full max-w-[200px] h-auto object-cover rounded" />
+              <Image 
+                src={formik.values.image.url} 
+                alt="Preview" 
+                width={200} 
+                height={200} 
+                className="mt-2 w-full max-w-[200px] h-auto object-cover rounded" 
+              />
             )}
             {formik.touched.image && formik.errors.image && (
               <div className="text-red-500 text-sm mt-1">

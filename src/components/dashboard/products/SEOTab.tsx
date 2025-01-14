@@ -13,7 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { axiosInstance } from '@/lib/axiosInstance'
 import { useToast } from '@/hooks/use-toast'
-import axios from 'axios';
+import axios from 'axios'
+import Image from 'next/image'
 
 interface SEOImage {
   url: string;
@@ -66,45 +67,44 @@ export const SEOTab: React.FC = () => {
     },
   })
 
-  useEffect(() => {
-    const fetchSEOData = async () => {
-      try {
-        const response = await axiosInstance.get(`/products/${productId}/seo`)
-        const seoData = response.data.data
-        formik.setValues({
-          title: seoData.title || '',
-          description: seoData.description || '',
-          keywords: seoData.keywords || '',
-          image: seoData.image || { url: '', id: '' }
-        })
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          if (error.response?.status === 404) {
-            // If SEO data doesn't exist yet, keep the initial empty values
-            console.log('No SEO data found for this product. You can add new SEO details.')
-          } else {
-            console.error('Error fetching SEO data:', error.message)
-            toast({
-              title: "Error fetching SEO data",
-              description: error.message || "Please try again",
-              variant: "destructive",
-            })
-          }
+  const fetchSEOData = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(`/products/${productId}/seo`)
+      const seoData = response.data.data
+      formik.setValues({
+        title: seoData.title || '',
+        description: seoData.description || '',
+        keywords: seoData.keywords || '',
+        image: seoData.image || { url: '', id: '' }
+      })
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          console.log('No SEO data found for this product. You can add new SEO details.')
         } else {
-          console.error('Unexpected error:', error)
+          console.error('Error fetching SEO data:', error.message)
           toast({
-            title: "Unexpected error",
-            description: "Please try again",
+            title: "Error fetching SEO data",
+            description: error.message || "Please try again",
             variant: "destructive",
           })
         }
-      } finally {
-        setIsLoading(false)
+      } else {
+        console.error('Unexpected error:', error)
+        toast({
+          title: "Unexpected error",
+          description: "Please try again",
+          variant: "destructive",
+        })
       }
+    } finally {
+      setIsLoading(false)
     }
+  }, [productId, toast, formik])
 
+  useEffect(() => {
     fetchSEOData()
-  }, [productId, toast])
+  }, [fetchSEOData])
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -236,9 +236,11 @@ export const SEOTab: React.FC = () => {
               >
                 {formik.values.image.url ? (
                   <div className="relative">
-                    <img
-                      src={formik.values.image.url}
+                    <Image
+                      src={formik.values.image.url || "/placeholder.svg"}
                       alt="SEO preview"
+                      width={200}
+                      height={200}
                       className="max-w-[200px] h-auto rounded-md"
                     />
                     <Button

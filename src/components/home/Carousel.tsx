@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-
+import Image from 'next/image'
 const images = [
   {
     url: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
@@ -90,10 +90,11 @@ export default function Carousel() {
           }}
           className="absolute w-full h-full"
         >
-          <img
+          <Image
             src={images[index].url}
             alt={`Banner ${index + 1}`}
-            className="w-full h-full object-cover"
+            layout="fill" // Esto asegura que la imagen se ajuste al tamaño del contenedor
+            objectFit="cover" // Similar a `object-cover` en la etiqueta <img>
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent">
             <div className="container mx-auto px-4 h-full flex flex-col justify-center items-start">

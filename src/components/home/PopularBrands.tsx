@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { motion, useAnimation, useMotionValue, useTransform } from 'framer-motion'
+import { motion, useAnimation, useMotionValue, useTransform, PanInfo } from 'framer-motion'
 import Image from 'next/image'
 import { axiosInstance } from '@/lib/axiosInstance'
 
@@ -24,7 +24,7 @@ const BrandCard = ({ brand }: { brand: Brand }) => {
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
     >
-      <Image src={brand.image.url} alt={brand.name} width={96} height={96} className="object-contain mb-2" />
+      <Image src={brand.image.url || "/placeholder.svg"} alt={brand.name} width={96} height={96} className="object-contain mb-2" />
       <motion.div 
         className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white p-2"
         initial={{ y: '100%' }}
@@ -92,7 +92,7 @@ const AnimatedCarousel = ({ brands }: { brands: Brand[] }) => {
     }
   }, [controls, width, isMounted, x])
 
-  const handleDragEnd = (event: any, info: any) => {
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (info.offset.x > 100) {
       controls.start({
         x: 0,
@@ -143,7 +143,8 @@ export default function PopularBrands() {
         const response = await axiosInstance.get('/brands')
         setBrands(response.data)
         setIsLoading(false)
-      } catch (err) {
+      } catch (error) {
+        console.error('Error fetching brands:', error)
         setError('Failed to fetch brands. Please try again later.')
         setIsLoading(false)
       }

@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Formik, Form, Field, ErrorMessage } from 'formik'
+import { Formik, Form, Field, ErrorMessage,FieldProps } from 'formik'
 import * as Yup from 'yup'
 import Cookies from "js-cookie"
 import { jwtDecode } from "jwt-decode"
@@ -130,7 +130,7 @@ export default function AccountInfo() {
                     Name
                   </label>
                   <Field name="name">
-                    {({ field }: any) => (
+                    {({ field }: FieldProps) => (
                       <Input {...field} />
                     )}
                   </Field>
@@ -144,10 +144,13 @@ export default function AccountInfo() {
                     Email
                   </label>
                   <Field name="email">
-                    {({ field }: any) => (
+                    {({ field }: FieldProps) => (
                       <Input type="email" {...field} />
                     )}
                   </Field>
+
+
+
                   <ErrorMessage name="email">
                     {msg => <p className="text-sm text-destructive">{msg}</p>}
                   </ErrorMessage>
@@ -164,14 +167,11 @@ export default function AccountInfo() {
                       disabled 
                     />
                     <Field name="mobile">
-                      {({ field }: any) => (
-                        <Input 
-                          {...field} 
-                          placeholder="912345678"
-                          maxLength={9}
-                        />
-                      )}
-                    </Field>
+                        {({ field }: FieldProps) => (
+                          <Input {...field} placeholder="912345678" maxLength={9} />
+                        )}
+                      </Field>
+
                   </div>
                   <ErrorMessage name="mobile">
                     {msg => <p className="text-sm text-destructive">{msg}</p>}

@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronRight, LucideIcon } from 'lucide-react';
+import { ChevronRight, type LucideIcon } from "lucide-react"
 
 import {
   Collapsible,
@@ -19,7 +19,7 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 
-export function NavOrders({
+export function NavMain({
   items,
 }: {
   items: {
@@ -35,7 +35,7 @@ export function NavOrders({
 }) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Orden - Pedidos</SidebarGroupLabel>
+      <SidebarGroupLabel>Productos & Stock</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible key={item.title} asChild defaultOpen={item.isActive}>
@@ -76,4 +76,3 @@ export function NavOrders({
     </SidebarGroup>
   )
 }
-

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import Image from 'next/image';
 
 const promotions = [
   {
@@ -30,7 +31,14 @@ export default function PromotionCards() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {promotions.map((promo, index) => (
             <Card key={index} className="overflow-hidden">
-              <img src={promo.image} alt={promo.title} className="w-full h-48 object-cover" />
+              <Image
+                  src={promo.image}
+                  alt={promo.title}
+                  width={500} // Define el ancho que debe tener la imagen
+                  height={200} // Define la altura que debe tener la imagen
+                  className="object-cover" // El componente Image también admite clases como object-cover
+                />
+
               <CardHeader>
                 <CardTitle>{promo.title}</CardTitle>
                 <CardDescription>{promo.description}</CardDescription>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { useFormik } from 'formik'
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { axiosInstance } from '@/lib/axiosInstance'
 import { useToast } from '@/hooks/use-toast'
 import { Toaster } from '@/components/ui/toaster'
+import axios from 'axios'
 
 interface ShippingFormValues {
   shippingType: "Free" | "Flat Rate"
@@ -50,35 +51,35 @@ export default function ShippingPage() {
     },
   })
 
-  useEffect(() => {
-    const fetchShippingData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axiosInstance.get(`/products/${productId}/shippingreturn`);
-        const shippingData = response.data.data;
-        if (shippingData) {
-          formik.setValues({
-            shippingType: shippingData.shippingType,
-            shippingCost: shippingData.shippingCost,
-            isProductQuantityMultiply: shippingData.isProductQuantityMultiply,
-            shippingAndReturnPolicy: shippingData.shippingAndReturnPolicy,
-          });
-        }
-      } catch (error: any) {
-        if (error.response && error.response.status === 404) {
-          // If data is not found, we'll use the initial values
-          console.log('No shipping data found. Using default values.');
-        } else {
-          console.error('Error fetching shipping data:', error);
-          toast({ variant: "destructive", description: 'Failed to load shipping details. Using default values.' });
-        }
-      } finally {
-        setIsLoading(false);
+  const fetchShippingData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await axiosInstance.get(`/products/${productId}/shippingreturn`);
+      const shippingData = response.data.data;
+      if (shippingData) {
+        formik.setValues({
+          shippingType: shippingData.shippingType,
+          shippingCost: shippingData.shippingCost,
+          isProductQuantityMultiply: shippingData.isProductQuantityMultiply,
+          shippingAndReturnPolicy: shippingData.shippingAndReturnPolicy,
+        });
       }
-    };
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        // If data is not found, we'll use the initial values
+        console.log('No shipping data found. Using default values.');
+      } else {
+        console.error('Error fetching shipping data:', error);
+        toast({ variant: "destructive", description: 'Failed to load shipping details. Using default values.' });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [productId, formik, toast]);
 
+  useEffect(() => {
     fetchShippingData();
-  }, [productId]);
+  }, [fetchShippingData]);
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>
