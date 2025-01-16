@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import Image from 'next/image'
@@ -54,29 +54,38 @@ interface BrandFormProps {
 
 export function BrandForm({ open, onOpenChange, onSubmit, initialBrand }: BrandFormProps) {
   const { toast } = useToast()
+  const [formValues, setFormValues] = useState({
+    name: '',
+    description: '',
+    image: { url: '', id: '' },
+    status: 'active' as 'active' | 'inactive',
+  })
 
   const formik = useFormik({
-    initialValues: {
-      name: '',
-      description: '',
-      image: { url: '', id: '' },
-      status: 'active' as 'active' | 'inactive',
-    },
+    initialValues: formValues,
     validationSchema,
+    enableReinitialize: true,
     onSubmit: (values) => {
       onSubmit(values)
-      formik.resetForm()
+      onOpenChange(false)
     },
   })
 
   useEffect(() => {
-    if (initialBrand) {
-      const { ...rest } = initialBrand
-      formik.setValues(rest)
-    } else {
-      formik.resetForm()
+    if (open) {
+      if (initialBrand) {
+        const { ...rest } = initialBrand
+        setFormValues(rest)
+      } else {
+        setFormValues({
+          name: '',
+          description: '',
+          image: { url: '', id: '' },
+          status: 'active' as 'active' | 'inactive',
+        })
+      }
     }
-  }, [initialBrand, formik])
+  }, [open, initialBrand])
 
   const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -146,7 +155,7 @@ export function BrandForm({ open, onOpenChange, onSubmit, initialBrand }: BrandF
             />
             {formik.values.image.url && (
               <Image 
-                src={formik.values.image.url} 
+                src={formik.values.image.url || "/placeholder.svg"} 
                 alt="Preview" 
                 width={200} 
                 height={200} 

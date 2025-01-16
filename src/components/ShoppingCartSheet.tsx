@@ -13,6 +13,7 @@ import { DialogTitle } from "@/components/ui/dialog"
 import { useRouter } from 'next/navigation'
 import { ScrollArea } from "@/components/ui/scroll-area"
 import Image from 'next/image'
+import axios from 'axios';
 interface DecodedToken {
   userId: string;
   role: string;
@@ -65,22 +66,22 @@ export function ShoppingCartSheet() {
   }, [router])
 
   const fetchCartItems = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
     try {
-      const token = Cookies.get('token')
+      const token = Cookies.get('token');
       if (!token) {
-        setCartData(null)
-        setIsLoading(false)
-        return
+        setCartData(null);
+        setIsLoading(false);
+        return;
       }
 
-      const decodedToken = jwtDecode<DecodedToken>(token)
-      const userId = decodedToken.userId
+      const decodedToken = jwtDecode<DecodedToken>(token);
+      const userId = decodedToken.userId;
       
-      const response = await axiosInstance.get(`/cart/${userId}`)
+      const response = await axiosInstance.get(`/cart/${userId}`);
       
-      if (response.data && Array.isArray(response.data.items)) {
+      if (response.status === 200 && response.data && Array.isArray(response.data.items)) {
         // Asegurarse de que todos los items tengan la información completa
         const normalizedItems = response.data.items.map((item: CartItem) => ({
           ...item,
@@ -94,27 +95,33 @@ export function ShoppingCartSheet() {
             ...item.variationId,
             price: item.variationId?.price || item.productId?.sellingPrice || 0
           }
-        }))
+        }));
 
         setCartData({
           ...response.data,
           items: normalizedItems
-        })
+        });
       } else {
-        throw new Error('Datos de carrito inválidos recibidos')
+        // If the response is 404 or the cart is empty, set an empty cart
+        setCartData({ _id: '', userId: '', items: [], createdAt: '', updatedAt: '' });
       }
     } catch (err) {
-      console.error('Error al obtener los items del carrito:', err)
-      setError('No se pudieron cargar los items del carrito. Por favor, intenta de nuevo.')
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los items del carrito. Por favor, intenta de nuevo.",
-        variant: "destructive",
-      })
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
+        // Treat 404 as an empty cart
+        setCartData({ _id: '', userId: '', items: [], createdAt: '', updatedAt: '' });
+      } else {
+        console.error('Error al obtener los items del carrito:', err);
+        setError('No se pudieron cargar los items del carrito. Por favor, intenta de nuevo.');
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los items del carrito. Por favor, intenta de nuevo.",
+          variant: "destructive",
+        });
+      }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [])
+  }, []);
 
   const updateQuantity = useCallback(async (itemId: string, change: number) => {
     if (isUpdating) return
