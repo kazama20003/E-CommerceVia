@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 
 // Crear la instancia de Axios
 export const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://161.132.49.93/api", // URL base de la API
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://161.132.49.93/api", // URL base de la http://161.132.49.93/api
   timeout: 10000, // Tiempo de espera en milisegundos
   headers: {
     "Content-Type": "application/json", // Tipo de contenido predeterminado

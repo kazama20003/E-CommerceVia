@@ -24,13 +24,7 @@ interface Variation {
   _id: string;
 }
 
-interface ProductImage {
-  url: string;
-  id: string;
-  _id: string;
-}
-
-interface RelatedProduct {
+interface Product {
   _id: string;
   slug: string;
   name: string;
@@ -48,16 +42,12 @@ interface RelatedProduct {
   unit: string;
 }
 
-interface ProductDetail {
-  _id: string;
-  name: string;
+interface ProductDetail extends Product {
   description: string;
   sellingPrice: number;
-  images: ProductImage[];
   colors?: string[];
   sizes?: string[];
   rating?: number;
-  relatedProducts?: RelatedProduct[];
   videos?: Array<{ provider: string; link: string; _id: string }>;
   shippingReturn?: {
     shippingType: string;
@@ -65,8 +55,6 @@ interface ProductDetail {
     isProductQuantityMultiply: boolean;
     shippingAndReturnPolicy: string;
   };
-  variations: Variation[];
-  slug: string;
   category?: {
     _id: string;
     name: string;
@@ -88,7 +76,7 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState<number>(1);
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
-  const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [formErrors, setFormErrors] = useState({
     color: '',
     size: ''
@@ -99,7 +87,7 @@ const ProductDetail = () => {
       try {
         setLoading(true);
         const response = await axiosInstance.get(`/products/${params.slug}/byslug`);
-        console.log(response);
+        console.log("Producto principal:", response.data);
         
         if (response.data?.status && response.data?.data) {
           const productData = response.data.data as ProductDetail;
@@ -113,11 +101,20 @@ const ProductDetail = () => {
           }
 
           // Fetch related products based on the category
-          if (productData.category?._id) {
-            const relatedResponse = await axiosInstance.get(`/products?category=${productData.category._id}&limit=4`);
+          if (productData.category) {
+            console.log("Fetching related products for category:", productData.category);
+            const relatedResponse = await axiosInstance.get(`/products?category=${productData.category}&limit=10`);
+            console.log("Productos relacionados:", relatedResponse.data);
+            
             if (relatedResponse.data?.data) {
-              setRelatedProducts(relatedResponse.data.data.filter((p: RelatedProduct) => p._id !== productData._id));
+              const filteredRelated = relatedResponse.data.data.filter((p: Product) => p._id !== productData._id);
+              console.log("Productos relacionados filtrados:", filteredRelated);
+              setRelatedProducts(filteredRelated);
+            } else {
+              console.log("No se encontraron productos relacionados");
             }
+          } else {
+            console.log("El producto no tiene categoría para buscar relacionados");
           }
         }
       } catch (err) {
@@ -270,7 +267,7 @@ const ProductDetail = () => {
       };
 
       const response = await axiosInstance.post("/cart", cartData);
-      console.log('post cart',response);
+      console.log('post cart', response);
       
       if (response.data && response.status === 200) {
         toast({
@@ -346,7 +343,7 @@ Descripción breve: ${product.description.substring(0, 100)}...
               className="bg-gray-100 p-4 rounded-lg"
             >
               <Image 
-                src={selectedImage} 
+                src={selectedImage || "/placeholder.svg"} 
                 alt={`Image of ${product.name}`} 
                 width={600} 
                 height={600} 
@@ -363,7 +360,7 @@ Descripción breve: ${product.description.substring(0, 100)}...
                   whileTap={{ scale: 0.95 }}
                 >
                   <Image 
-                    src={img.url} 
+                    src={img.url || "/placeholder.svg"} 
                     alt={`${product.name} - View ${index + 1}`} 
                     width={100} 
                     height={100} 
@@ -524,6 +521,7 @@ Descripción breve: ${product.description.substring(0, 100)}...
             <ProductCard data={relatedProducts} isWishlisted={false} />
           </div>
         )}
+
         <Toaster />
       </div>
       <Footer/>
